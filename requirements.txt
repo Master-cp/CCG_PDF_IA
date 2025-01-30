@@ -24,3 +24,4 @@ langchain_groq
 pytesseract
 pypdf
 faiss-cpu
+sentence-transformers
