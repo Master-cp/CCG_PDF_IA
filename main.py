@@ -21,6 +21,7 @@ warnings.filterwarnings('ignore', category=UserWarning, message='.*torch.classes
 
 from langchain_community.document_loaders import PyPDFLoader  # Replace UnstructuredPDFLoader with PyPDFLoader
 from langchain_ollama import OllamaEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.vectorstores import FAISS
@@ -108,7 +109,7 @@ def create_vector_db(file_upload) -> FAISS:
     logger.info("Document split into chunks")
 
     # Use FAISS instead of ChromaDB
-    embeddings = OllamaEmbeddings(model="nomic-embed-text")
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     vector_db = FAISS.from_documents(
         documents=chunks,
         embedding=embeddings
