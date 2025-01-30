@@ -345,8 +345,7 @@ def main() -> None:
 
 
     # Model selection
-    if available_models:
-        selected_model = model_option
+    selected_model = model_option
         
 
     # Add checkbox for sample PDF
