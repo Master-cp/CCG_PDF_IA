@@ -26,9 +26,11 @@ from langchain_community.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnablePassthrough
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from typing import List, Tuple, Dict, Any, Optional, Generator
+from langchain.embeddings import HuggingFaceEmbeddings
 
 
 
@@ -146,7 +148,7 @@ def process_question(question: str, vector_db: Chroma, selected_model: str) -> s
     logger.info(f"Processing question: {question} using model: {selected_model}")
     
     # Initialize LLM
-    llm = ChatOllama(model="llama3")
+    llm = ChatGroq(model=selected_model, groq_api_key=st.secrets["GROQ_API_KEY"]) # ChatOllama(model=selected_model)
     
     # Query prompt template
     QUERY_PROMPT = PromptTemplate(
