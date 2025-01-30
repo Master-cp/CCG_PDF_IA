@@ -283,7 +283,7 @@ def main() -> None:
     """
     Main function to run the Streamlit application.
     """
-    st.subheader("🧠 Ollama PDF RAG playground", divider="gray", anchor=False)
+    st.subheader("🧠 CCG RAG Model", divider="gray", anchor=False)
     
     # Initialize chat history and selected model
     if "messages" not in st.session_state:
