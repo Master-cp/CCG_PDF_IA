@@ -316,8 +316,8 @@ def main() -> None:
 
 
     # Get available models
-    models_info = ollama.list()
-    available_models = extract_model_names(models_info)
+   # models_info = ollama.list()
+    # available_models = extract_model_names(models_info)
 
     # Create layout
     col1, col2 = st.columns([1.5, 2])
