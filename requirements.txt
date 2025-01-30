@@ -21,3 +21,5 @@ coverage==7.4.0
 pydantic==2.10.4
 pdf2image
 langchain_groq
+libgl1
+libglib2.0-0
