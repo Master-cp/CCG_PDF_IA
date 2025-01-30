@@ -23,6 +23,7 @@ from langchain_community.document_loaders import PyPDFLoader  # Replace Unstruct
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_ollama import ChatOllama
@@ -90,16 +91,8 @@ def extract_model_names(models_info: Any) -> Tuple[str, ...]:
         return tuple()
 
 
-def create_vector_db(file_upload) -> Chroma:
-    """
-    Create a vector database from an uploaded PDF file.
 
-    Args:
-        file_upload (st.UploadedFile): Streamlit file upload object containing the PDF.
-
-    Returns:
-        Chroma: A vector store containing the processed document chunks.
-    """
+def create_vector_db(file_upload) -> FAISS:
     logger.info(f"Creating vector DB from file upload: {file_upload.name}")
     temp_dir = tempfile.mkdtemp()
 
@@ -107,28 +100,24 @@ def create_vector_db(file_upload) -> Chroma:
     with open(path, "wb") as f:
         f.write(file_upload.getvalue())
         logger.info(f"File saved to temporary path: {path}")
-        loader = PyPDFLoader(path)  # Use PyPDFLoader instead of UnstructuredPDFLoader
+        loader = PyPDFLoader(path)
         data = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=7500, chunk_overlap=100)
     chunks = text_splitter.split_documents(data)
     logger.info("Document split into chunks")
 
-    # Updated embeddings configuration with persistent storage
+    # Use FAISS instead of ChromaDB
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
-    vector_db = Chroma.from_documents(
+    vector_db = FAISS.from_documents(
         documents=chunks,
-        embedding=embeddings,
-        persist_directory=PERSIST_DIRECTORY,
-        collection_name=f"pdf_{hash(file_upload.name)}"  # Unique collection name per file
+        embedding=embeddings
     )
-    logger.info("Vector DB created with persistent storage")
+    logger.info("Vector DB created with FAISS")
 
     shutil.rmtree(temp_dir)
     logger.info(f"Temporary directory {temp_dir} removed")
     return vector_db
-
-
 
 # Initialize the Groq client
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
