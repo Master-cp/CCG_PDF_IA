@@ -49,7 +49,7 @@ client = Groq(
 
 # Streamlit page configuration
 st.set_page_config(
-    page_title="Ollama PDF RAG Streamlit UI",
+    page_title="CCG  genIA",
     page_icon="🎈",
     layout="wide",
     initial_sidebar_state="collapsed",
