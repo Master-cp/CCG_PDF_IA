@@ -30,7 +30,6 @@ from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnablePassthrough
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from typing import List, Tuple, Dict, Any, Optional, Generator
-from langchain.embeddings import HuggingFaceEmbeddings
 
 
 
