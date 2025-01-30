@@ -19,7 +19,7 @@ from groq import Groq
 # Suppress torch warning
 warnings.filterwarnings('ignore', category=UserWarning, message='.*torch.classes.*')
 
-from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import PyPDFLoader  # Replace UnstructuredPDFLoader with PyPDFLoader
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -107,7 +107,7 @@ def create_vector_db(file_upload) -> Chroma:
     with open(path, "wb") as f:
         f.write(file_upload.getvalue())
         logger.info(f"File saved to temporary path: {path}")
-        loader = UnstructuredPDFLoader(path)
+        loader = PyPDFLoader(path)  # Use PyPDFLoader instead of UnstructuredPDFLoader
         data = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=7500, chunk_overlap=100)
@@ -127,6 +127,7 @@ def create_vector_db(file_upload) -> Chroma:
     shutil.rmtree(temp_dir)
     logger.info(f"Temporary directory {temp_dir} removed")
     return vector_db
+
 
 
 # Initialize the Groq client
