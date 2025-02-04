@@ -449,7 +449,7 @@ def main() -> None:
                             st.markdown(response)
                         else:
                             response = process_general_question(prompt, selected_model)
-                            #st.markdown(response)
+                            st.markdown(response)
     
             
     
