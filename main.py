@@ -220,7 +220,7 @@ def process_general_question(question: str, selected_model: str) -> str:
         full_response = st.write_stream(chat_responses_generator)
 
         # Append the assistant's response to the messages list
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+        # st.session_state.messages.append({"role": "assistant", "content": full_response})
 
     except Exception as e:
         st.error(e, icon="🚨")
