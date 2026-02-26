@@ -166,12 +166,14 @@ def main() -> None:
         st.session_state.selected_model = None
 
     models = {
-        "llama-3.1-70b-versatile": {"name": "LLaMA3.1-70b-versatile", "tokens": 128000, "developer": "Meta"},
+        #"gemma2-9b-it": {"name": "Gemma2-9b-it", "tokens": 8192, "developer": "Google"},
+        "llama-3.3-70b-versatile": {"name": "LLaMA3.3-70b-versatile", "tokens": 128000, "developer": "Meta"},
         "llama-3.1-8b-instant": {"name": "LLaMA3.1-8b-instant", "tokens": 128000, "developer": "Meta"},
-        "llama3-70b-8192": {"name": "LLaMA3-70b-8192", "tokens": 8192, "developer": "Meta"},
+        #"llama3-70b-8192": {"name": "LLaMA3-70b-8192", "tokens": 8192, "developer": "Meta"},
+        "meta-llama/llama-prompt-guard-2-22m": {"name": "LLaMA3-guard", "tokens": 128000, "developer": "Meta"},
+        "meta-llama/llama-4-scout-17b-16e-instruct": {"name": "LLaMA3-4-scount", "tokens": 128000, "developer": "Meta"},
         "llama3-8b-8192": {"name": "LLaMA3-8b-8192", "tokens": 8192, "developer": "Meta"},
         "mixtral-8x7b-32768": {"name": "Mixtral-8x7b-Instruct-v0.1", "tokens": 32768, "developer": "Mistral"},
-        "gemma2-9b-it": {"name": "Gemma2-9b-it", "tokens": 8192, "developer": "Google"},
     }
 
     col1, col2 = st.columns([1.5, 2])
@@ -181,7 +183,7 @@ def main() -> None:
             "Choisissez un modèle:",
             options=list(models.keys()),
             format_func=lambda x: models[x]["name"],
-            index=4
+            index=1
         )  
 
     if st.session_state.selected_model != model_option:
