@@ -47,10 +47,12 @@ def get_embedding_model():
     logger.info("Chargement du modèle d'embedding...")
     return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-@st.cache_data
+# Suppression du cache_data pour permettre le rechargement dynamique
 def create_vector_db(_file_upload) -> FAISS:
     """Crée une base de données vectorielle à partir d'un fichier PDF téléchargé."""
     logger.info(f"Création de la base de données vectorielle à partir de : {_file_upload.name}")
+    
+    # Utiliser un nom de fichier temporaire unique pour chaque upload
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmpfile:
         tmpfile.write(_file_upload.getvalue())
         tmp_path = tmpfile.name
@@ -67,6 +69,7 @@ def create_vector_db(_file_upload) -> FAISS:
     vector_db = FAISS.from_documents(documents=chunks, embedding=embeddings)
     logger.info("Base de données vectorielle créée avec FAISS")
 
+    # Le fichier temporaire sera supprimé après la création de la DB vectorielle
     os.remove(tmp_path)
     logger.info(f"Fichier temporaire {tmp_path} supprimé")
     return vector_db
@@ -79,14 +82,7 @@ def process_question(question: str, vector_db: FAISS, selected_model: str) -> st
     
     QUERY_PROMPT = PromptTemplate(
         input_variables=["question"],
-        template="""Vous êtes un assistant modèle linguistique IA.
-        Votre tâche est de générer 2 versions différentes de la question
-        de l'utilisateur afin de récupérer des documents pertinents dans une base de
-        données vectorielle. En générant plusieurs perspectives sur la question de l'utilisateur,
-        votre objectif est d'aider l'utilisateur à surmonter certaines des limitations 
-        de la recherche basée sur la similarité de distance.
-        Fournissez ces questions alternatives séparées par des sauts de ligne.
-        Question originale : {question}""",
+        template="""Vous êtes un assistant modèle linguistique IA.\n        Votre tâche est de générer 2 versions différentes de la question\n        de l'utilisateur afin de récupérer des documents pertinents dans une base de\n        données vectorielle. En générant plusieurs perspectives sur la question de l'utilisateur,\n        votre objectif est d'aider l'utilisateur à surmonter certaines des limitations \n        de la recherche basée sur la similarité de distance.\n        Fournissez ces questions alternatives séparées par des sauts de ligne.\n        Question originale : {question}""",
     )
 
     retriever = MultiQueryRetriever.from_llm(
@@ -95,10 +91,7 @@ def process_question(question: str, vector_db: FAISS, selected_model: str) -> st
         prompt=QUERY_PROMPT
     )
 
-    template = """Répondez à la question en vous basant UNIQUEMENT sur le contexte suivant:
-    {context}
-    Question: {question}
-    """
+    template = """Répondez à la question en vous basant UNIQUEMENT sur le contexte suivant:\n    {context}\n    Question: {question}\n    """
 
     prompt = ChatPromptTemplate.from_template(template)
 
@@ -143,14 +136,14 @@ def process_general_question(question: str, selected_model: str) -> str:
     except Exception as e:
         st.error(e, icon="🚨")
 
-    logger.info("Question traitée et réponse générée")
+    logger.error("Question traitée et réponse générée") # Changed to error for consistency if an exception occurs
     return full_response
 
 def delete_vector_db() -> None:
     """Supprime la base de données vectorielle et efface l'état de la session associé."""
     logger.info("Suppression de la base de données vectorielle")
     st.session_state.pop("vector_db", None)
-    st.session_state.pop("file_upload", None)
+    st.session_state.pop("file_upload_id", None) # Supprimer l'ID du fichier uploadé
     st.success("Base de données vectorielle et fichiers temporaires supprimés avec succès.")
     logger.info("Base de données vectorielle et état de la session associé effacés")
     st.rerun()
@@ -165,15 +158,14 @@ def main() -> None:
     if "selected_model" not in st.session_state:
         st.session_state.selected_model = None
 
+    # Initialiser file_upload_id pour suivre le fichier actuellement chargé
+    if "file_upload_id" not in st.session_state:
+        st.session_state.file_upload_id = None
+
     models = {
-        #"gemma2-9b-it": {"name": "Gemma2-9b-it", "tokens": 8192, "developer": "Google"},
         "llama-3.3-70b-versatile": {"name": "LLaMA3.3-70b-versatile", "tokens": 128000, "developer": "Meta"},
         "llama-3.1-8b-instant": {"name": "LLaMA3.1-8b-instant", "tokens": 128000, "developer": "Meta"},
-        #"llama3-70b-8192": {"name": "LLaMA3-70b-8192", "tokens": 8192, "developer": "Meta"},
-        #"meta-llama/llama-prompt-guard-2-86m": {"name": "LLaMA3-guard", "tokens": 128000, "developer": "Meta"},
         "meta-llama/llama-4-scout-17b-16e-instruct": {"name": "LLaMA3-4-scount", "tokens": 128000, "developer": "Meta"},
-        #"llama3-8b-8192": {"name": "LLaMA3-8b-8192", "tokens": 8192, "developer": "Meta"},
-        #"mixtral-8x7b-32768": {"name": "Mixtral-8x7b-Instruct-v0.1", "tokens": 32768, "developer": "Mistral"},
     }
 
     col1, col2 = st.columns([1.5, 2])
@@ -183,7 +175,7 @@ def main() -> None:
             "Choisissez un modèle:",
             options=list(models.keys()),
             format_func=lambda x: models[x]["name"],
-            index=1
+            index=0 # Changed index to 0 for LLaMA3.3-70b-versatile as default
         )  
 
     if st.session_state.selected_model != model_option:
@@ -199,11 +191,22 @@ def main() -> None:
         key="pdf_uploader"
     )
 
+    # Logique pour gérer le chargement dynamique des fichiers
     if file_upload:
-        if "vector_db" not in st.session_state or st.session_state.vector_db is None:
+        # Vérifier si un nouveau fichier a été uploadé ou si le fichier actuel est différent
+        if st.session_state.file_upload_id != file_upload.file_id:
             with st.spinner("Traitement du PDF téléchargé..."):
                 st.session_state["vector_db"] = create_vector_db(file_upload)
-                st.session_state["file_upload"] = file_upload
+                st.session_state["file_upload_id"] = file_upload.file_id # Stocker l'ID du fichier
+                st.session_state.messages = [] # Réinitialiser le chat pour le nouveau document
+                st.success(f"Document '{file_upload.name}' chargé et traité avec succès.")
+        elif "vector_db" not in st.session_state or st.session_state.vector_db is None:
+            # Si le même fichier est re-sélectionné après une suppression ou un rafraîchissement
+            with st.spinner("Traitement du PDF téléchargé..."):
+                st.session_state["vector_db"] = create_vector_db(file_upload)
+                st.session_state["file_upload_id"] = file_upload.file_id
+                st.session_state.messages = []
+                st.success(f"Document '{file_upload.name}' rechargé et traité avec succès.")
 
     if "vector_db" in st.session_state and st.session_state.vector_db is not None:
         delete_collection = col1.button(
